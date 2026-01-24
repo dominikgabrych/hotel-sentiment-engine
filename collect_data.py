@@ -47,7 +47,7 @@ if __name__ == "__main__":
         {
             "url": "https://www.booking.com/hotel/pl/granary.en-gb.html?aid=304142&label=gen173nr-10CAEoggI46AdICVgEaLYBiAEBmAEzuAEXyAEM2AED6AEB-AEBiAIBqAIBuAL-mbnLBsACAdICJDM0MjM3ZjhkLTU2NmYtNDY5Mi04Nzk4LWJkNTM4YzRjYjExNdgCAeACAQ&sid=fd292eafc57e85a289f6338a6f7e19ef&dest_id=-537080&dest_type=city&dist=0&group_adults=2&group_children=0&hapos=83&hpos=8&nflt=ht_id%3D204&no_rooms=1&req_adults=2&req_children=0&room1=A%2CA&sb_price_type=total&sr_order=bayesian_review_score&srepoch=1769190508&srpvid=1c5c6a762fc02597b37e7101f73ab8d7&type=total&ucfs=1&#tab-reviews",
             "name": "Great Polonia The Granary La Suite Hotel",
-            "stars": "5",
+            "stars": 5,
             "district": "Stare Miasto"
         },
     ]
