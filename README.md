@@ -43,9 +43,8 @@ Hotel managers often face a **"Data Blind Spot"**:
 
 ## 📸 Dashboard Preview
 
-*(Place your screenshots here - e.g., the Main KPI view and the Root Cause chart)*
-![Dashboard KPI](path/to/your/image_kpi.png)
-![Root Cause Analysis](path/to/your/image_nlp.png)
+<img width="2555" height="1047" alt="Zrzut ekranu 2026-01-24 161100" src="https://github.com/user-attachments/assets/d348998f-cf48-4128-80d4-7619009f2abc" />
+<img width="2248" height="534" alt="Zrzut ekranu 2026-01-24 161114" src="https://github.com/user-attachments/assets/d00a67a9-9979-4d60-a125-54c187345b17" />
 
 ---
 
