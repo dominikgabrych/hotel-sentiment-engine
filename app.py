@@ -437,38 +437,126 @@ tokens = nltk.word_tokenize(neg_text_blob.lower())
 
 # 1. POS TAGGING
 tagged_tokens = nltk.pos_tag(tokens)
-allowed_tags = {'NN', 'NNS', 'JJ', 'JJR', 'JJS'}
 
-# 2. EXTENDED BAN LIST
+# Define tag categories
+adjective_tags = {'JJ', 'JJR', 'JJS'}  # Adjectives
+noun_tags = {'NN', 'NNS'}  # Nouns
+
+# 2. EXTENDED BAN LIST (expanded)
 custom_ban_list = set(stopwords.words('english')).union({
     'room', 'rooms', 'hotel', 'stay', 'everything', 'nothing', 'anything', 
     'good', 'bad', 'nice', 'great', 'ok', 'okay', 'bit', 'small', 'big',  
     'staff', 'reception', 'location', 'bathroom', 'night', 'day', 'time', 
-    'wroclaw', 'poland', 'place', 'apartment', 'hostel',
-    'would', 'could', 'get', 'got', 'was', 'were', 'had', 'like', 'need', 'needs', 'another', 'first' 
+    'wroclaw', 'poland', 'place', 'apartment', 'hostel', 'thing', 'things',
+    'would', 'could', 'get', 'got', 'was', 'were', 'had', 'like', 'need', 
+    'needs', 'another', 'first', 'also', 'really', 'very', 'little', 'lot',
+    'one', 'two', 'more', 'less', 'much', 'many', 'some', 'other', 'only'
 })
 
-smart_tokens = [word for word, tag in tagged_tokens if tag in allowed_tags and word not in custom_ban_list and len(word) > 2]
+# 3. CREATE ADJECTIVE + NOUN BIGRAMS (Descriptive Complaints)
+# Filter to keep only words with length > 2 and alphabetic
+meaningful_tokens = [(word, tag) for word, tag in tagged_tokens 
+                     if len(word) > 2 and word.isalpha() and word not in custom_ban_list]
 
-if smart_tokens:
-    most_common = Counter(smart_tokens).most_common(15)
-    df_words = pd.DataFrame(most_common, columns=['Issue', 'Count'])
+# Create bigrams from filtered tokens
+bigram_list = list(nltk.bigrams(meaningful_tokens))
+
+# Filter for ADJECTIVE + NOUN pattern specifically (e.g., "hard bed", "cold room")
+adjective_noun_pairs = []
+for (word1, tag1), (word2, tag2) in bigram_list:
+    # Pattern: Adjective followed by Noun = descriptive complaint
+    if tag1 in adjective_tags and tag2 in noun_tags:
+        adjective_noun_pairs.append(f"{word1} {word2}")
+
+if adjective_noun_pairs:
+    most_common = Counter(adjective_noun_pairs).most_common(15)
+    df_words = pd.DataFrame(most_common, columns=['Complaint (Adj + Noun)', 'Count'])
 
     fig_words = px.bar(
-        df_words, x='Count', y='Issue', orientation='h',
-        title="What hurts people the most",
+        df_words, x='Count', y='Complaint (Adj + Noun)', orientation='h',
+        title="What hurts people the most (Adjective + Noun Pairs)",
         color='Count', color_continuous_scale='Reds'
     )
     fig_words.update_layout(yaxis=dict(autorange="reversed")) 
     st.plotly_chart(fig_words, use_container_width=True)
     st.info("""
-    **💡 Data cleaning process**
+    **💡 Adjective + Noun Analysis**
     
-    NLTK POS Tagging extracts only **Nouns** and **Adjectives** from complaint text,
-    filtering out generic filler words to reveal specific objects of dissatisfaction.
+    This chart extracts **descriptive complaints** where an adjective modifies a noun:
+    - "hard bed" → Mattress needs replacement
+    - "cold room" → Heating system issue  
+    - "noisy street" → Soundproofing needed
+    
+    Each pair tells the manager **what** the problem is and **which object** has it.
     """)
 else:
-    st.warning("Not enough text data to generate meaningful topics.")
+    st.warning("Not enough descriptive complaint patterns found in the data.")
+
+# --- SECTION E: REVIEW DRILL-DOWN (Evidence Verification) ---
+st.header("📋 Review Drill-Down (Direct Evidence)")
+st.markdown("""
+Managers are skeptical of AI conclusions. This section lets you **verify findings** by reading actual guest reviews 
+filtered by keyword or category. See the raw evidence behind the charts.
+""")
+
+col_search, col_cat_filter = st.columns([1, 1])
+
+with col_search:
+    keyword_search = st.text_input(
+        "🔍 Search reviews by keyword", 
+        placeholder="e.g., mattress, breakfast, noise...",
+        help="Enter a word to find all reviews mentioning it"
+    )
+
+with col_cat_filter:
+    drill_category = st.selectbox(
+        "📁 Or filter by category",
+        options=["All Categories"] + list(category_map.keys()),
+        help="Select a category to see reviews mentioning related topics"
+    )
+
+# Apply filters to find matching reviews
+drill_df = df_filtered.copy()
+
+# Filter by keyword if provided
+if keyword_search:
+    keyword_lower = keyword_search.lower().strip()
+    text_match = (
+        drill_df['pos_text'].str.lower().str.contains(keyword_lower, na=False) |
+        drill_df['neg_text'].str.lower().str.contains(keyword_lower, na=False)
+    )
+    drill_df = drill_df[text_match]
+
+# Filter by category if selected
+if drill_category != "All Categories":
+    cat_col = category_map[drill_category]
+    drill_df = drill_df[drill_df[cat_col]]
+
+# Display results
+if keyword_search or drill_category != "All Categories":
+    st.markdown(f"**Found {len(drill_df)} matching reviews**")
+    
+    if len(drill_df) > 0:
+        # Show sample reviews in an expandable section
+        with st.expander(f"📝 View Reviews ({min(len(drill_df), 15)} shown)", expanded=True):
+            display_df = drill_df[['hotel_name', 'rating_score', 'pos_text', 'neg_text', 'true_sentiment']].head(15)
+            
+            for idx, row in display_df.iterrows():
+                sentiment_color = "🟢" if row['true_sentiment'] > 0.3 else "🔴" if row['true_sentiment'] < -0.1 else "🟡"
+                
+                st.markdown(f"""
+                **{row['hotel_name']}** | Rating: **{row['rating_score']}/10** | Sentiment: {sentiment_color} {row['true_sentiment']:.2f}
+                
+                ✅ *Positive:* {row['pos_text'][:300] if pd.notna(row['pos_text']) else 'N/A'}{'...' if pd.notna(row['pos_text']) and len(str(row['pos_text'])) > 300 else ''}
+                
+                ❌ *Negative:* {row['neg_text'][:300] if pd.notna(row['neg_text']) else 'N/A'}{'...' if pd.notna(row['neg_text']) and len(str(row['neg_text'])) > 300 else ''}
+                
+                ---
+                """)
+    else:
+        st.info("No reviews match your search criteria. Try a different keyword or category.")
+else:
+    st.info("👆 Enter a keyword or select a category above to view matching reviews.")
 
 # --- FOOTER ---
 st.markdown("---")
