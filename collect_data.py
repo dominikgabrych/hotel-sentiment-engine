@@ -178,6 +178,11 @@ def run_pass1(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             locale="en-GB",
         )
+        context.add_cookies([
+            {"name": "bkng_lang", "value": "en-gb", "domain": ".booking.com", "path": "/"},
+            {"name": "bkng_sso_lang", "value": "en-gb", "domain": ".booking.com", "path": "/"},
+            {"name": "b_lang", "value": "en-gb", "domain": ".booking.com", "path": "/"}
+        ])
         page = context.new_page()
         scraper = BookingScraper(page)
 
@@ -231,6 +236,11 @@ def run_pass2(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             locale="en-GB",
         )
+        context.add_cookies([
+            {"name": "bkng_lang", "value": "en-gb", "domain": ".booking.com", "path": "/"},
+            {"name": "bkng_sso_lang", "value": "en-gb", "domain": ".booking.com", "path": "/"},
+            {"name": "b_lang", "value": "en-gb", "domain": ".booking.com", "path": "/"}
+        ])
         page = context.new_page()
         scraper = BookingScraper(page)
 
@@ -269,6 +279,8 @@ if __name__ == "__main__":
     hotels = parse_target_hotels("target_hotels.txt")
     if args.test:
         hotels = hotels[:1]
+        args.pass1 = True
+        args.pass2 = False  # Skip pass 2 entirely during test so we don't pull 600 reviews
 
     ensure_output_dir()
     PASS1_OUTPUT = "data/01_raw/raw_reviews.csv"

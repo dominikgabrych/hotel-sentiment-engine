@@ -192,12 +192,45 @@ class BookingScraper:
         count = cards.count()
         print(f"   -> Found {count} review cards on this page.")
 
+        # Click "Show translation" buttons robustly
+        try:
+            trans_loc = self.page.locator('div[data-testid="review-translation-handle"] button:has-text("Show translation")')
+            btn_count = trans_loc.count()
+            if btn_count > 0:
+                print(f"   -> Found {btn_count} 'Show translation' buttons. Clicking them...")
+                for _ in range(15):  # Max iterations just to be safe
+                    btn = self.page.locator('div[data-testid="review-translation-handle"] button:has-text("Show translation")').first
+                    if btn.count() > 0:
+                        try:
+                            # force=True prevents Playwright from refusing to click if obscured by headers/banners
+                            btn.click(force=True, timeout=2000)
+                            time.sleep(0.5)  # small delay between clicks
+                        except Exception as e:
+                            print(f"      [!] Failed to click button: {e}")
+                            break
+                    else:
+                        break
+                
+                # Wait for the translations to finish loading
+                try:
+                    self.page.wait_for_selector('div[data-testid="review-translation-handle"] button:has-text("Show original")', timeout=5000)
+                    time.sleep(1) # Extra buffer for text nodes to swap
+                except Exception:
+                    time.sleep(2)
+        except Exception as e:
+            print(f"   -> Translation clicker error: {e}")
+
         for i in range(count):
             card = cards.nth(i)
 
             title = self._get_text_safe(card, '[data-testid="review-title"]')
             pos = self._get_text_safe(card, '[data-testid="review-positive-text"]')
             neg = self._get_text_safe(card, '[data-testid="review-negative-text"]')
+
+            # Skip reviews that have no actual comments (only a title and score)
+            if not pos and not neg:
+                continue
+
             name = self._get_text_safe(card, '[data-testid="review-author-name"]')
             rating_str = self._get_text_safe(card, '[data-testid="review-score"]')
             stay_date = self._get_text_safe(card, '[data-testid="review-stay-date"]')
