@@ -40,9 +40,9 @@ def clean_reviews(input_path, output_path):
     df = df[date_mask].copy()
     print(f"  Rows remaining after date filter: {len(df)} (Removed {initial_count - len(df)})")
     
-    # 2. Drop duplicates by source_id
-    print("Dropping duplicates...")
-    df = df.drop_duplicates(subset=['source_id'])
+    # 2. Drop duplicates based on content, NOT source_id (to avoid hash collisions for anonymous reviewers)
+    print("Dropping duplicates based on actual content...")
+    df = df.drop_duplicates(subset=['hotel_name', 'stay_date', 'rating_score', 'pos_text', 'neg_text'])
     print(f"  Rows remaining: {len(df)}")
     
     # 3. Drop rows with missing ratings
