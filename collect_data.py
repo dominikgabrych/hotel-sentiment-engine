@@ -18,6 +18,7 @@ import os
 import csv
 import re
 import argparse
+import json
 from typing import List, Tuple, Dict
 from dataclasses import asdict
 
@@ -85,7 +86,7 @@ def save_reviews_to_csv(reviews: List[HotelReview], filepath: str):
 
 
 def save_distribution_row(
-    filepath: str, hotel_name: str, hotel_stars: int, counts: Dict[str, int]
+    filepath: str, hotel_name: str, hotel_stars: int, counts: Dict[str, any]
 ):
     """
     Appends one row to the review_distribution.csv metadata file.
@@ -101,6 +102,12 @@ def save_distribution_row(
         "poor_3to5",
         "very_poor_1to3",
         "negative_total",
+        "type_families",
+        "type_couples",
+        "type_group_of_friends",
+        "type_solo_travellers",
+        "type_business_travellers",
+        "languages_json",
     ]
 
     negative_total = (
@@ -119,6 +126,12 @@ def save_distribution_row(
         "poor_3to5": counts.get("poor_3to5", 0),
         "very_poor_1to3": counts.get("very_poor_1to3", 0),
         "negative_total": negative_total,
+        "type_families": counts.get("type_families", 0),
+        "type_couples": counts.get("type_couples", 0),
+        "type_group_of_friends": counts.get("type_group_of_friends", 0),
+        "type_solo_travellers": counts.get("type_solo_travellers", 0),
+        "type_business_travellers": counts.get("type_business_travellers", 0),
+        "languages_json": json.dumps(counts.get("languages", {})),
     }
 
     with open(filepath, mode="a", newline="", encoding="utf-8") as f:

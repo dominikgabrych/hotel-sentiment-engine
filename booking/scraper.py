@@ -127,32 +127,60 @@ class BookingScraper:
         except Exception as e:
             print(f"   WARNING: Could not set score filter: {e}")
 
-    def get_review_counts(self) -> Dict[str, int]:
+    def get_review_counts(self) -> Dict[str, any]:
         """
-        Reads the number of reviews per score category from the scoreRange dropdown.
+        Reads the number of reviews per score category, customer type, and language.
+        Returns a dict with keys from SCORE_FILTER_KEYS mapping and dynamically collected keys.
+        """
+        counts = {"languages": {}}
 
-        Returns a dict with keys from SCORE_FILTER_KEYS mapping, e.g.:
-          { "total": 4079, "wonderful_9plus": 2068, "fair_5to7": 326, ... }
-        """
-        counts = {}
+        # 1. Score Range
         try:
             filter_select = self.page.locator('select[data-testid="scoreRange"]')
-            if filter_select.count() == 0:
-                return counts
-            options = filter_select.locator("option").all()
-            for opt in options:
-                key_raw = opt.get_attribute("value")
-                text = opt.inner_text().strip()
-                # Parse number in parentheses: "Fair: 5-7 (326)" → 326
-                match = re.search(r"\((\d+)\)", text)
-                if match and key_raw and key_raw in SCORE_FILTER_KEYS:
-                    friendly_key = SCORE_FILTER_KEYS[key_raw]
-                    counts[friendly_key] = int(match.group(1))
-                    counts[f"_raw_{key_raw}"] = int(
-                        match.group(1)
-                    )  # Keep raw key for filter use
+            if filter_select.count() > 0:
+                options = filter_select.locator("option").all()
+                for opt in options:
+                    key_raw = opt.get_attribute("value")
+                    text = opt.inner_text().strip()
+                    # Parse number in parentheses: "Fair: 5-7 (326)" → 326
+                    match = re.search(r"\((\d+)\)", text)
+                    if match and key_raw and key_raw in SCORE_FILTER_KEYS:
+                        friendly_key = SCORE_FILTER_KEYS[key_raw]
+                        counts[friendly_key] = int(match.group(1))
+                        counts[f"_raw_{key_raw}"] = int(match.group(1))
         except Exception as e:
             print(f"   WARNING: Could not read review counts: {e}")
+
+        # 2. Customer Type
+        try:
+            customer_select = self.page.locator('select[data-testid="customerType"]')
+            if customer_select.count() > 0:
+                options = customer_select.locator("option").all()
+                for opt in options:
+                    key_raw = opt.get_attribute("value")
+                    text = opt.inner_text().strip()
+                    match = re.search(r"\((\d+)\)", text)
+                    if match and key_raw and key_raw != "ALL":
+                        counts[f"type_{key_raw.lower()}"] = int(match.group(1))
+        except Exception as e:
+            print(f"   WARNING: Could not read customer type counts: {e}")
+
+        # 3. Languages
+        try:
+            lang_select = self.page.locator('select[data-testid="languages"]')
+            if lang_select.count() > 0:
+                options = lang_select.locator("option").all()
+                for opt in options:
+                    key_raw = opt.get_attribute("value")
+                    text = opt.inner_text().strip()
+                    match = re.search(r"\((\d+)\)", text)
+                    if (
+                        match and key_raw and key_raw != "0"
+                    ):  # 0 is ALL in language select
+                        counts["languages"][key_raw] = int(match.group(1))
+        except Exception as e:
+            print(f"   WARNING: Could not read language counts: {e}")
+
         return counts
 
     # ─────────────────────── core scraping ───────────────────────────
