@@ -9,9 +9,9 @@ Usage:
   python collect_data.py --pass1 --target 200  # Collect 200 reviews per hotel
 
 Output files:
-  output/raw_reviews.csv           → Pass 1 results
-  output/negative_reviews_raw.csv  → Pass 2 results
-  output/review_distribution.csv  → Score distribution metadata per hotel
+  data/01_raw/raw_reviews.csv           → Pass 1 results
+  data/01_raw/negative_reviews_raw.csv  → Pass 2 results
+  data/01_raw/review_distribution.csv   → Score distribution metadata per hotel
 """
 
 import os
@@ -59,8 +59,8 @@ def parse_target_hotels(filepath: str) -> List[Tuple[str, int]]:
 
 
 def ensure_output_dir():
-    """Creates the output/ directory if it doesn't exist."""
-    os.makedirs("output", exist_ok=True)
+    """Creates the necessary directories if they don't exist."""
+    os.makedirs("data/01_raw", exist_ok=True)
 
 
 def save_reviews_to_csv(reviews: List[HotelReview], filepath: str):
@@ -258,9 +258,9 @@ if __name__ == "__main__":
         hotels = hotels[:1]
 
     ensure_output_dir()
-    PASS1_OUTPUT = "output/raw_reviews.csv"
-    PASS2_OUTPUT = "output/negative_reviews_raw.csv"
-    DISTRIBUTION_FILE = "output/review_distribution.csv"
+    PASS1_OUTPUT = "data/01_raw/raw_reviews.csv"
+    PASS2_OUTPUT = "data/01_raw/negative_reviews_raw.csv"
+    DISTRIBUTION_FILE = "data/01_raw/review_distribution.csv"
 
     if args.pass1:
         run_pass1(

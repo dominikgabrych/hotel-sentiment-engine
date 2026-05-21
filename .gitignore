@@ -5,8 +5,5 @@
 __pycache__/
 *.pyc
 
-# Project Outputs
-output/
-
 # Hotel Targets
 target_hotels.txt
