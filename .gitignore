@@ -2,3 +2,23 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Output files
+output/
+
+# Environment files
+.env
+.env.*
+
+# Playwright/Browser artifacts
+test-results/
+playwright-report/
+
+# Logs
+logs/
+*.log
+
+# Pytest / Coverage
+.pytest_cache/
+htmlcov/
+.coverage
