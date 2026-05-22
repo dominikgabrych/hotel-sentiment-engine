@@ -226,13 +226,14 @@ def descriptive_statistics(df: pd.DataFrame) -> None:
     # fig_01 — rating distribution histogram
     fig, ax = plt.subplots(figsize=(8, 5))
     ax.hist(df["rating_score"], bins=20, color="#4C9BE8", edgecolor="white", linewidth=0.6)
-    ax.set_title("Distribution of Guest Ratings", fontweight="bold", pad=12)
-    ax.set_xlabel("Rating Score (1–10)")
-    ax.set_ylabel("Number of Reviews")
+    ax.set_title("Rozkład ocen gości", fontweight="bold", pad=12)
+    ax.set_xlabel("Ocena ogólna (1–10)")
+    ax.set_ylabel("Liczba recenzji")
     ax.xaxis.set_major_locator(mticker.MultipleLocator(1))
     mean_val = df["rating_score"].mean()
+    label_text = f"Średnia = {mean_val:.2f}".replace('.', ',')
     ax.axvline(mean_val, color="#E8634C", linestyle="--", linewidth=1.4,
-               label=f"Mean = {mean_val:.2f}")
+               label=label_text)
     ax.legend(frameon=False)
     fig.tight_layout()
     save_figure(fig, "fig_01_rating_distribution.png")
@@ -285,14 +286,15 @@ def analyse_pb1(df: pd.DataFrame) -> None:
     for patch, color in zip(bp["boxes"], PALETTE["stars"]):
         patch.set_facecolor(color)
     ax.set_xticks([1, 2, 3])
-    ax.set_xticklabels(["3★ Hotels", "4★ Hotels", "5★ Hotels"])
-    ax.set_title("Guest Rating by Hotel Star Category (PB1)", fontweight="bold", pad=12)
-    ax.set_ylabel("Rating Score (1–10)")
+    ax.set_xticklabels(["Hotele 3★", "Hotele 4★", "Hotele 5★"])
+    ax.set_title("Ocena ogólna a standard hotelu (PB1)", fontweight="bold", pad=12)
+    ax.set_ylabel("Ocena ogólna (1–10)")
     ax.set_ylim(0, 11)
     ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
 
     p_str = f"p = {result['p-value']:.4f}" if result["p-value"] >= 0.0001 else "p < 0.0001"
-    ax.annotate(f"{result['Test']}: {result['Statistic label']} = {result['Statistic']:.2f}, {p_str}",
+    annot_str = f"{result['Test']}: {result['Statistic label']} = {result['Statistic']:.2f}, {p_str}".replace('.', ',')
+    ax.annotate(annot_str,
                 xy=(0.5, 0.02), xycoords="axes fraction", ha="center",
                 fontsize=10, color="#555555")
     fig.tight_layout()
@@ -351,14 +353,15 @@ def analyse_pb2(df: pd.DataFrame) -> None:
     for patch, color in zip(bp["boxes"], colors):
         patch.set_facecolor(color)
     ax.set_xticks(range(1, len(labels) + 1))
-    ax.set_xticklabels(labels)
-    ax.set_title("Guest Rating by Traveler Type (PB2)", fontweight="bold", pad=12)
-    ax.set_ylabel("Rating Score (1–10)")
+    ax.set_xticklabels(["Biznes", "Pary", "Rodziny", "Solo", "Grupa znajomych"])
+    ax.set_title("Ocena ogólna a profil podróżnego (PB2)", fontweight="bold", pad=12)
+    ax.set_ylabel("Ocena ogólna (1–10)")
     ax.set_ylim(0, 11)
     ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
 
     p_str = f"p = {result['p-value']:.4f}" if result["p-value"] >= 0.0001 else "p < 0.0001"
-    ax.annotate(f"{result['Test']}: {result['Statistic label']} = {result['Statistic']:.2f}, {p_str}",
+    annot_str = f"{result['Test']}: {result['Statistic label']} = {result['Statistic']:.2f}, {p_str}".replace('.', ',')
+    ax.annotate(annot_str,
                 xy=(0.5, 0.02), xycoords="axes fraction", ha="center",
                 fontsize=10, color="#555555")
     fig.tight_layout()
@@ -409,46 +412,28 @@ def analyse_pb3(df: pd.DataFrame) -> None:
     }])
     save_table(result_df, "tab_04b_pb3_main_test.csv")
 
-    # fig_04 — grouped bar chart: means + error bars
-    means  = {k: v.mean() for k, v in groups.items()}
-    stds   = {k: v.std()  for k, v in groups.items()}
-    ns     = {k: len(v)   for k, v in groups.items()}
-
-    fig, ax = plt.subplots(figsize=(7, 7))
-    fig.subplots_adjust(bottom=0.22)   # Extra space at bottom for annotation
-
-    x      = np.arange(len(means))
-    labels = list(means.keys())
-    values = list(means.values())
-    errors = list(stds.values())
-    bars   = ax.bar(x, values, width=0.5, color=PALETTE["country"],
-                    edgecolor="white", linewidth=0.8, yerr=errors,
-                    capsize=6, error_kw=dict(linewidth=1.4, color="#333"))
-
-    # Place n= label above the top of the error bar cap, not inside the bar
-    for bar, n, val, err in zip(bars, ns.values(), values, errors):
-        top = val + err + 0.25   # just above the error bar cap
-        ax.text(bar.get_x() + bar.get_width() / 2,
-                top, f"n = {n}", ha="center", va="bottom",
-                fontsize=10, color="#333333")
-
-    ax.set_xticks(x)
-    ax.set_xticklabels(["Polish Guests", "Foreign Guests"], fontsize=12)
-    ax.set_title("Mean Rating Score: Poland vs. Other Countries (PB3)",
-                 fontweight="bold", pad=14)
-    ax.set_ylabel("Mean Rating Score (±SD)")
-    ax.set_ylim(0, 11.5)   # Extra headroom for n= labels above error bars
+    # fig_04 — boxplot per country (changed from bar chart due to non-parametric Mann-Whitney)
+    fig, ax = plt.subplots(figsize=(7, 6))
+    data_for_plot = [groups["Poland"], groups["Other"]]
+    bp = ax.boxplot(data_for_plot, patch_artist=True, widths=0.5,
+                    medianprops=dict(color="white", linewidth=2))
+    for patch, color in zip(bp["boxes"], PALETTE["country"]):
+        patch.set_facecolor(color)
+    
+    ax.set_xticks([1, 2])
+    ax.set_xticklabels(["Goście z Polski", "Goście z zagranicy"], fontsize=12)
+    ax.set_title("Ocena ogólna a kraj pochodzenia (PB3)", fontweight="bold", pad=12)
+    ax.set_ylabel("Ocena ogólna (1–10)")
+    ax.set_ylim(0, 11)
     ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
 
-    # Test annotation in a clean box below the x-axis labels
     p_str = f"p = {p:.4f}" if p >= 0.0001 else "p < 0.0001"
-    annotation = f"{test_name}: {stat_label} = {stat:,.2f},  {p_str}"
-    fig.text(0.5, 0.03, annotation, ha="center", va="bottom",
-             fontsize=10, color="#444444",
-             bbox=dict(boxstyle="round,pad=0.4", facecolor="#F5F5F5",
-                       edgecolor="#CCCCCC", linewidth=0.8))
+    annot_str = f"{test_name}: {stat_label} = {stat:.2f}, {p_str}".replace('.', ',')
+    ax.annotate(annot_str,
+                xy=(0.5, 0.02), xycoords="axes fraction", ha="center",
+                fontsize=10, color="#555555")
 
-    fig.tight_layout(rect=[0, 0.10, 1, 1])   # Reserve 10% at the bottom for annotation
+    fig.tight_layout()
     save_figure(fig, "fig_04_pb3_country_comparison.png")
     print()
 
