@@ -37,6 +37,7 @@ import scikit_posthocs as sp
 import seaborn as sns
 from scipy.stats import shapiro, levene, kruskal, mannwhitneyu, f_oneway, ttest_ind
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
+from matplotlib.figure import Figure
 
 warnings.filterwarnings("ignore")
 
@@ -79,7 +80,9 @@ def save_table(df: pd.DataFrame, filename: str) -> None:
     print(f"  [✓] Table saved → {path}")
 
 
-def save_figure(fig: plt.Figure, filename: str) -> None:
+from matplotlib.figure import Figure
+
+def save_figure(fig: Figure, filename: str) -> None:
     path = os.path.join(FIGURES_DIR, filename)
     fig.savefig(path, dpi=DPI, bbox_inches="tight")
     plt.close(fig)

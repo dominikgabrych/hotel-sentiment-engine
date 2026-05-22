@@ -73,7 +73,7 @@ def apply_base_filters(df: pd.DataFrame) -> pd.DataFrame:
 
     print("Filtering by date range (January 2024 – May 2026)...")
     date_mask = (df["parsed_date"] >= "2024-01-01") & (df["parsed_date"] <= "2026-05-31")
-    df = df[date_mask].copy()
+    df = df[date_mask].copy()  # type: ignore
     print(f"  Remaining: {len(df):,}")
 
     print("Dropping rows with missing rating scores...")
