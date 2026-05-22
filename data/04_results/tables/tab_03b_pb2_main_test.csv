@@ -1,0 +1,2 @@
+Research Problem,Test,Statistic,Statistic label,p-value,Decision (α=0.05)
+PB2,Kruskal-Wallis,569.0352,H,0.0,Reject H₀ (p < 0.05)

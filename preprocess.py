@@ -44,7 +44,7 @@ def is_english(text: str) -> bool:
 
 
 def load_and_combine() -> pd.DataFrame:
-    """Loads both raw scraping passes and merges them into one DataFrame."""
+    """Loads scraping passes, merges them, and completely integrates Business travelers."""
     df_pass1 = pd.read_csv("data/01_raw/raw_reviews.csv")
     df_pass2 = pd.read_csv("data/01_raw/negative_reviews_raw.csv")
 
@@ -52,9 +52,19 @@ def load_and_combine() -> pd.DataFrame:
     print(f"Pass 2 (negative reviews): {len(df_pass2):,} records")
 
     combined = pd.concat([df_pass1, df_pass2], ignore_index=True)
-    print(f"Combined total:            {len(combined):,} records\n")
-    return combined
+    
+    business_path = "data/01_raw/business_reviews_raw.csv"
+    if os.path.exists(business_path):
+        df_biz = pd.read_csv(business_path)
+        print(f"Pass 3 (business recovery): {len(df_biz):,} records found")
+        # Ensure they have the correct flag from scraper
+        df_biz["traveler_type"] = "Business"
+        
+        # Append them to the end of the combined dataset
+        combined = pd.concat([combined, df_biz], ignore_index=True)
 
+    print(f"Combined total before dedup: {len(combined):,} records\n")
+    return combined
 
 def apply_base_filters(df: pd.DataFrame) -> pd.DataFrame:
     """Applies filters common to both output datasets."""
@@ -70,7 +80,11 @@ def apply_base_filters(df: pd.DataFrame) -> pd.DataFrame:
     df = df.dropna(subset=["rating_score"])
 
     print("Removing duplicate reviews based on content...")
-    df = df.drop_duplicates(subset=["hotel_name", "stay_date", "rating_score", "pos_text", "neg_text"])
+    # Sort to prioritize 'Business' so that keep='first' retains it over 'Solo'
+    df = df.sort_values(by=["traveler_type"]).drop_duplicates(
+        subset=["hotel_name", "stay_date", "rating_score", "pos_text", "neg_text"],
+        keep="first"
+    )
     print(f"  Remaining after deduplication: {len(df):,}\n")
 
     return df
