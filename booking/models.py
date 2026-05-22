@@ -4,8 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class HotelReview:
     """
-    Data model representing a single hotel review from Booking.com.
-    Specification source: AGENT_CONTEXT.md (Section 4 — Model Danych).
+    Holds information extracted from a single review on Booking.com.
     """
 
     # Identification
