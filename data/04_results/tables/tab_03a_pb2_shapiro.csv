@@ -1,6 +1,6 @@
 Group,N,W statistic,p-value,Normal (α=0.05)
-Business,1767,0.8014,0.0,No
-Couple,1858,0.931,0.0,No
-Family,1357,0.9264,0.0,No
-Solo,1042,0.8869,0.0,No
-Group of friends,369,0.9419,0.0,No
+Business,1871,0.7995,0.0,No
+Couple,1944,0.9291,0.0,No
+Family,1430,0.9227,0.0,No
+Solo,1087,0.8863,0.0,No
+Group of friends,386,0.9388,0.0,No

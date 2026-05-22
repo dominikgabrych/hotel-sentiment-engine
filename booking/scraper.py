@@ -299,8 +299,14 @@ class BookingScraper:
             print("   -> Clicking 'Next'...")
             self._dismiss_cookie_banner()  # Banner may appear lazily after page interactions
             next_btn.click()
-            time.sleep(random.uniform(2.0, 4.0))
-            self.page.wait_for_load_state("networkidle")
+            time.sleep(random.uniform(1.5, 2.5))
+            try:
+                self.page.wait_for_selector(
+                    'div[data-testid="review-card"]', timeout=20000
+                )
+            except Exception:
+                # If review cards don't appear within 20s, try once more then continue
+                time.sleep(3)
             page_num += 1
 
         return all_reviews
