@@ -16,7 +16,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from wordcloud import WordCloud
 
 # --- SŁOWNIK PO ANALIZIE AGENTA ---
 BASE_DICTIONARY = {
@@ -111,13 +110,20 @@ def generate_outputs() -> None:
     # WYKRES 05: Ranking negatywnych aspektów (Bar Chart)
     # -------------------------------------------------------------------------
     plt.figure(figsize=(10, 6))
-    order = df_neg["kategoria_pl"].value_counts().index
-    ax = sns.countplot(y="kategoria_pl", data=df_neg, order=order, palette="rocket")
+    counts = df_neg["kategoria_pl"].value_counts()
+    order = counts.index
+    
+    # Rysujemy słupki
+    ax = sns.countplot(y="kategoria_pl", data=df_neg, order=order, hue="kategoria_pl", palette="rocket", legend=False)
     
     plt.title("Najczęstsze kategorie skarg gości (Analiza Sentymentu - ABSA)", fontsize=14, pad=15)
     plt.xlabel("Liczba negatywnych wzmianek w opiniach", fontsize=12)
-    plt.ylabel("Kategoria Narzekań", fontsize=12)
+    plt.ylabel("Kategoria", fontsize=12)
     
+    # Ustawienie sztywnego limitu, żeby nie dopuścić do wygenerowania linii 2500, ale zostawić ramkę
+    ax.set_xlim(0, counts.max() + 250)
+    
+    # Dodanie opisów wartości
     for container in ax.containers:
         ax.bar_label(container, padding=5)
         
@@ -125,39 +131,6 @@ def generate_outputs() -> None:
     plt.savefig("data/04_results/figures/fig_05_absa_negative_aspects.png", dpi=300)
     plt.close()
     print("[✓] fig_05_absa_negative_aspects.png zapisano.")
-
-    # -------------------------------------------------------------------------
-    # WYKRES 06: Wordcloud (6 chmur na jednym obrazku)
-    # -------------------------------------------------------------------------
-    categories = [cat for cat in BASE_DICTIONARY.keys()]
-    
-    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
-    axes = axes.flatten()
-    
-    # Ustalamy polskie tytuły zgodnie z nowym słownikiem
-    cat_titles = {c: POLISH_LABELS[c] for c in categories}
-    
-    for i, category in enumerate(categories):
-        subset = df_neg[df_neg["aspect_category"] == category]["extracted_aspect"]
-        text = " ".join(subset.astype(str).tolist())
-        
-        ax = axes[i]
-        
-        if text.strip():
-            # Chmura ciemna (biznesowa), max 40 najważniejszych słów
-            wordcloud = WordCloud(width=800, height=400, background_color="white",
-                                  colormap="inferno", max_words=40).generate(text)
-            ax.imshow(wordcloud, interpolation='bilinear')
-        else:
-            ax.text(0.5, 0.5, 'Brak Danych', horizontalalignment='center', verticalalignment='center')
-            
-        ax.axis("off")
-        ax.set_title(f"Słowa Kluczowe: {cat_titles[category]}", fontsize=14, pad=10)
-        
-    plt.tight_layout(pad=3.0)
-    plt.savefig("data/04_results/figures/fig_06_absa_wordcloud_per_aspect.png", dpi=300)
-    plt.close()
-    print("[✓] fig_06_absa_wordcloud_per_aspect.png zapisano.")
 
     # -------------------------------------------------------------------------
     # WYKRES 07: Heatmapa (Gwiazdki vs. Kategoria Narzekań)
@@ -168,8 +141,9 @@ def generate_outputs() -> None:
     cross_tab = pd.crosstab(df_neg["hotel_stars"], df_neg["kategoria_pl"], normalize='index') * 100
     
     plt.figure(figsize=(10, 5))
-    sns.heatmap(cross_tab, annot=True, fmt=".1f", cmap="OrRd", linewidths=.5, cbar_kws={'label': '% wszystkich skarg w danym standardzie'})
-    plt.title("Struktura problemów w zależności od standardu hotelu (%)", fontsize=14, pad=15)
+    # Bardzo krótki i profesjonalny napis dla uniknięcia ucinań
+    sns.heatmap(cross_tab, annot=True, fmt=".1f", cmap="OrRd", linewidths=.5, cbar_kws={'label': 'Odsetek opinii (%)'})
+    plt.title("Struktura problematyki w zależności od standardu hotelu (%)", fontsize=14, pad=15)
     plt.xlabel("Kategoria Skargi", fontsize=12)
     plt.ylabel("Standard Hotelu (Liczba Gwiazdek)", fontsize=12)
     
