@@ -57,63 +57,7 @@ plt.savefig(os.path.join(OUT_DIR, "fig_00a_language_distribution.png"), dpi=300)
 plt.savefig(os.path.join(ARTIFACT_DIR, "fig_00a_language_distribution.png"), dpi=300) # Do podglądu
 plt.close()
 
-# 2. Skumulowany rozkład zadowolenia (Bar chart)
-score_cols = ['wonderful_9plus', 'good_7to9', 'fair_5to7', 'poor_3to5', 'very_poor_1to3']
-score_labels = ['Znakomity (9-10)', 'Dobry (7-9)', 'Dostateczny (5-7)', 'Słaby (3-5)', 'Zły (1-3)']
-totals = df[score_cols].sum()
-
-plt.figure(figsize=(10, 6))
-ax = sns.barplot(x=score_labels, y=totals.values, palette="viridis")
-plt.title("Globalny Rozkład Ocen w Wrocławskich Hotelach", fontsize=14, fontweight='bold')
-plt.ylabel("Łączna Liczba Opinii", fontsize=12)
-plt.xlabel("Kategoria Oceny Booking.com", fontsize=12)
-
-# Dodawanie labeli nad słupkami
-for p in ax.patches:
-    ax.annotate(f'{int(p.get_height())}', (p.get_x() + p.get_width() / 2., p.get_height()), 
-                ha='center', va='center', xytext=(0, 8), textcoords='offset points', fontweight='bold')
-
-plt.tight_layout()
-plt.savefig(os.path.join(OUT_DIR, "fig_00b_score_distribution.png"), dpi=300)
-plt.savefig(os.path.join(ARTIFACT_DIR, "fig_00b_score_distribution.png"), dpi=300) # Do podglądu
-plt.close()
-
-# 3. Struktura Profili Podróżnych (Pie Chart)
-traveler_cols = ['type_couples', 'type_families', 'type_solo_travellers', 'type_business_travellers', 'type_group_of_friends']
-traveler_labels = ['Pary', 'Rodziny', 'Solo', 'Biznes', 'Grupy Znajomych']
-
-traveler_totals = df[traveler_cols].sum()
-
-plt.figure(figsize=(9, 6))
-colors_trav = sns.color_palette("Set2")[0:5]
-plt.pie(traveler_totals.values, labels=traveler_labels, autopct='%1.1f%%', startangle=90, colors=colors_trav, wedgeprops={'edgecolor': 'black'})
-plt.title("Ogólna Struktura Podróżnych we Wrocławskich Hotelach", fontsize=14, fontweight='bold')
-plt.tight_layout()
-plt.savefig(os.path.join(OUT_DIR, "fig_00c_traveler_distribution.png"), dpi=300)
-plt.savefig(os.path.join(ARTIFACT_DIR, "fig_00c_traveler_distribution.png"), dpi=300)
-plt.close()
-
-# 4. Rozkład Ocen wg Standardu Gwiazdek (100% Stacked Bar Chart)
-score_cols = ['wonderful_9plus', 'good_7to9', 'fair_5to7', 'poor_3to5', 'very_poor_1to3']
-score_labels = ['Znakomity', 'Dobry', 'Dostateczny', 'Słaby', 'Zły']
-
-grouped_stars = df.groupby('hotel_stars')[score_cols].sum()
-# Przeliczenie na procenty (aby każda kolumna miała 100%)
-grouped_stars_pct = grouped_stars.div(grouped_stars.sum(axis=1), axis=0) * 100
-
-plt.figure(figsize=(10, 6))
-grouped_stars_pct.plot(kind='bar', stacked=True, color=sns.color_palette("RdYlGn", 5)[::-1], ax=plt.gca())
-plt.title("Procentowy Rozkład Ocen wg Standardu Hotelu", fontsize=14, fontweight='bold')
-plt.xlabel("Standard Hotelu (Gwiazdki)", fontsize=12)
-plt.ylabel("Odsetek Opinii (%)", fontsize=12)
-plt.legend(score_labels, title="Ocena", bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.xticks(rotation=0)
-plt.tight_layout()
-plt.savefig(os.path.join(OUT_DIR, "fig_00d_score_by_stars.png"), dpi=300)
-plt.savefig(os.path.join(ARTIFACT_DIR, "fig_00d_score_by_stars.png"), dpi=300)
-plt.close()
-
-# 5. Wskaźnik Negatywności (Negative Rate) wg Gwiazdek i Profilu
+# 2. Wskaźnik Negatywności (Negative Rate) wg Gwiazdek
 # Zamiast robić ranking hoteli, pokażmy odsetek problemów (negative_total / total)
 df['negative_rate'] = (df['negative_total'] / df['total']) * 100
 negative_by_stars = df.groupby('hotel_stars')['negative_rate'].mean()
