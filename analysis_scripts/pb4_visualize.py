@@ -142,16 +142,58 @@ def generate_outputs() -> None:
     df_neg_full = pd.merge(df_neg, df_input_unique[["source_id", "neg_text"]], on="source_id", how="left")
     
     categories = [cat for cat in BASE_DICTIONARY.keys()]
-    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
-    axes = axes.flatten()
-    
     cat_titles = {c: POLISH_LABELS[c] for c in categories}
     
     # Basic stopwords to avoid meaningless grammatical structures in collocations
     boring_words = {"the", "a", "an", "is", "was", "were", "are", "of", "to", "in", "on", "for", 
                     "with", "and", "but", "very", "too", "so", "it", "this", "that", "my", "our", 
                     "room", "hotel", "at", "from", "as", "be", "we", "they", "there", "i", "you",
-                    "not", "no"}
+                    "not", "no", "came", "could", "couldn", "did", "didn", "does", "had", "has", 
+                    "here", "if", "maybe", "me", "one", "only", "or", "out", "over", "perhaps", 
+                    "s", "said", "same", "she", "should", "soem", "took", "wasn", "which", "who", 
+                    "would", "etc", "also", "try", "tried", "asked", "despite", "increases", 
+                    "puro", "chair", "everything", "says", "unfamiliar", "shortage", "without", 
+                    "shared", "young"}
+                    
+    PL_TRANSLATION_DICT = {
+        'air': 'powietrze', 'area': 'okolica', 'bad': 'zły', 'bathroom': 'łazienka', 'bathrooms': 'łazienki',
+        'bathtub': 'wanna', 'bed': 'łóżko', 'bedding': 'pościel', 'beds': 'łóżka', 'bread': 'chleb',
+        'breakfast': 'śniadanie', 'breakfasts': 'śniadania', 'broken': 'zepsuty', 'carpet': 'dywan',
+        'carpets': 'dywany', 'center': 'centrum', 'cheat': 'oszustwo', 'clean': 'czystość', 'cleaning': 'sprzątanie',
+        'cleanliness': 'czystość', 'clogged': 'zatkany', 'coffee': 'kawa', 'cold': 'zimny', 'comfortable': 'wygodny',
+        'compared': 'porównaniu', 'conclusion': 'wniosek', 'conditioning': 'klimatyzacja', 'costing': 'koszt',
+        'curtains': 'zasłony', 'customer': 'klient', 'dark': 'ciemny', 'decor': 'wystrój', 'desk': 'biurko',
+        'dirty': 'brudny', 'dishes': 'naczynia', 'door': 'drzwi', 'doors': 'drzwi', 'eggs': 'jajka',
+        'elevator': 'winda', 'employee': 'pracownik', 'equipment': 'wyposażenie', 'especially': 'szczególnie',
+        'excessive': 'wygórowany', 'expensive': 'drogi', 'fan': 'wiatrak', 'floor': 'podłoga', 'flush': 'spłuczka',
+        'food': 'jedzenie', 'friendly': 'przyjazny', 'full': 'pełny', 'furnishings': 'meble', 'furniture': 'meble',
+        'garden': 'ogród', 'great': 'świetny', 'grumpy': 'zrzędliwy', 'hairdryer': 'suszarka', 'half': 'połowa',
+        'hard': 'twardy', 'head': 'głowa', 'heating': 'ogrzewanie', 'hefty': 'wygórowana', 'high': 'wysoki',
+        'hot': 'gorący', 'inadequate': 'nieadekwatny', 'including': 'wliczając', 'increase': 'wzrost',
+        'informed': 'poinformowany', 'lady': 'pani', 'large': 'duży', 'leaky': 'nieszczelny', 'list': 'lista',
+        'location': 'lokalizacja', 'loud': 'głośny', 'lower': 'niższy', 'manager': 'menedżer', 'mattress': 'materac',
+        'mattresses': 'materace', 'music': 'muzyka', 'need': 'potrzeba', 'needs': 'potrzeby', 'noise': 'hałas',
+        'old': 'stary', 'options': 'opcje', 'outside': 'zewnątrz', 'overall': 'ogólnie', 'paid': 'zapłacony',
+        'parking': 'parking', 'pay': 'płacić', 'peeling': 'łuszczący', 'personnel': 'personel', 'pillow': 'poduszka',
+        'pillows': 'poduszki', 'pool': 'basen', 'poor': 'słaby', 'price': 'cena', 'prices': 'ceny',
+        'quality': 'jakość', 'ratio': 'stosunek', 'reaching': 'osiągający', 'reception': 'recepcja',
+        'receptionist': 'recepcjonista', 'receptionists': 'recepcjoniści', 'refrigerator': 'lodówka',
+        'restaurant': 'restauracja', 'rooms': 'pokoje', 'rude': 'niegrzeczny', 'sauna': 'sauna',
+        'scrambled': 'jajecznica', 'seemed': 'wydawało', 'served': 'obsłużony', 'service': 'obsługa',
+        'services': 'usługi', 'sheets': 'prześcieradła', 'shower': 'prysznic', 'significant': 'znaczący',
+        'single': 'pojedynczy', 'sink': 'umywalka', 'small': 'mały', 'smell': 'zapach', 'soap': 'mydło',
+        'sofa': 'sofa', 'soft': 'miękki', 'something': 'coś', 'sound': 'dźwięk', 'spa': 'spa', 'space': 'przestrzeń',
+        'staff': 'personel', 'stained': 'poplamiony', 'street': 'ulica', 'tea': 'herbata', 'temperature': 'temperatura',
+        'terrible': 'okropny', 'thin': 'cienki', 'toilet': 'toaleta', 'torn': 'podarty', 'towel': 'ręcznik',
+        'towels': 'ręczniki', 'tracks': 'tory', 'trainee': 'stażysta', 'tram': 'tramwaj', 'tv': 'tv', 
+        'uncomfortable': 'niewygodny', 'unfortunate': 'niefortunny', 'unfriendly': 'nieprzyjazny',
+        'unpleasant': 'nieprzyjemny', 'usable': 'użyteczny', 'value': 'jakość', 'ventilation': 'wentylacja',
+        'view': 'widok', 'waiter': 'kelner', 'wallpaper': 'tapeta', 'walls': 'ściany', 'water': 'woda',
+        'wellness': 'wellness', 'window': 'okno', 'windows': 'okna', 'worn': 'zużyty'
+    }
+    
+    fig, axes = plt.subplots(3, 2, figsize=(20, 16))
+    axes = axes.flatten()
     
     for i, category in enumerate(categories):
         subset = df_neg_full[df_neg_full["aspect_category"] == category]
@@ -168,26 +210,32 @@ def generate_outputs() -> None:
                 # Look for collocations tied directly to the aspect noun
                 if w1 == aspect or w2 == aspect:
                     if w1 not in boring_words and w2 not in boring_words:
+                        t1 = PL_TRANSLATION_DICT.get(w1, w1)
+                        t2 = PL_TRANSLATION_DICT.get(w2, w2)
                         # Join with dash so WordCloud treats it as a single chunk
-                        category_bigrams.append(f"{w1}-{w2}")
+                        category_bigrams.append(f"{t1}-{t2}")
                         
         text_for_cloud = " ".join(category_bigrams)
         ax = axes[i]
         
         if text_for_cloud.strip():
-            wordcloud = WordCloud(width=800, height=400, background_color="white",
-                                  colormap="inferno", max_words=30, collocations=False).generate(text_for_cloud)
+            # colormap="Dark2" zlikwiduje białe, żółte i puste kolory, faworyzując ostre i widoczne ciemne
+            # Bardziej płaski, rozszerzony w poziomie format (2:1) oszczędzający miejsce w Wordzie, ale rozległy (1000px) by dbać o widoczność
+            wordcloud = WordCloud(width=1000, height=500, background_color="white",
+                                  colormap="Dark2", max_words=30, min_font_size=26, 
+                                  collocations=False).generate(text_for_cloud)
             ax.imshow(wordcloud, interpolation='bilinear')
         else:
-            ax.text(0.5, 0.5, 'Brak Danych (brak kolokacji)', horizontalalignment='center', verticalalignment='center')
+            ax.text(0.5, 0.5, 'Brak Danych (brak kolokacji)', horizontalalignment='center', verticalalignment='center', fontsize=16)
             
         ax.axis("off")
-        ax.set_title(f"Kontekst (N-gramy): {cat_titles[category]}", fontsize=14, pad=10)
+        ax.set_title(f"Kontekst (N-gramy): {cat_titles[category]}", fontsize=24, pad=15, fontweight='bold')
         
-    plt.tight_layout(pad=3.0)
-    plt.savefig("data/04_results/figures/fig_06_absa_wordcloud_per_aspect.png", dpi=300)
+    plt.tight_layout(pad=4.0)
+    plt.savefig("data/04_results/figures/fig_06_absa_wordcloud_grid_3x2.png", dpi=300, bbox_inches='tight')
     plt.close()
-    print("[✓] fig_06_absa_wordcloud_per_aspect.png saved.")
+        
+    print("[✓] Fully grouped 3x2 grid wordclouds saved (all-in-one).")
 
     # -------------------------------------------------------------------------
     # PLOT 07: Heatmap (Hotel Stars vs. Complaint Category)
