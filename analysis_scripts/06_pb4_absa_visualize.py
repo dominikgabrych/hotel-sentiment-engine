@@ -219,8 +219,8 @@ def generate_outputs() -> None:
         ax = axes[i]
         
         if text_for_cloud.strip():
-            # colormap="Dark2" zlikwiduje białe, żółte i puste kolory, faworyzując ostre i widoczne ciemne
-            # Bardziej płaski, rozszerzony w poziomie format (2:1) oszczędzający miejsce w Wordzie, ale rozległy (1000px) by dbać o widoczność
+            # colormap="Dark2" removes white, yellow and empty colors, favoring sharp and visible dark ones
+            # A flatter, horizontally expanded format (2:1) saves space in Word, but is wide (1000px) to ensure visibility
             wordcloud = WordCloud(width=1000, height=500, background_color="white",
                                   colormap="Dark2", max_words=30, min_font_size=26, 
                                   collocations=False).generate(text_for_cloud)

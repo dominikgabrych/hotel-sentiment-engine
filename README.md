@@ -3,7 +3,7 @@
 ![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Pandas](https://img.shields.io/badge/Pandas-2.0+-green?style=for-the-badge&logo=pandas&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-Scraping-red?style=for-the-badge&logo=playwright&logoColor=white)
-![NLP](https://img.shields.io/badge/NLP-RoBERTa%20%7C%20ABSA-orange?style=for-the-badge)
+![NLP](https://img.shields.io/badge/NLP-DeBERTa%20%7C%20ABSA-orange?style=for-the-badge)
 ![Stats](https://img.shields.io/badge/Stats-Kruskal--Wallis%20%7C%20Dunn-purple?style=for-the-badge)
 
 A complete end-to-end data engineering, statistical, and Natural Language Processing (NLP) pipeline designed to extract, process, and evaluate guest satisfaction across the hospitality industry. The project acts as the technical groundwork for a comprehensive academic thesis evaluating guest satisfaction using Wrocław (Poland) as a case study.
@@ -15,7 +15,7 @@ The primary goal of this repository is to analyze the gap between hotel star rat
 * **PB1:** How does the star category impact overall guest satisfaction? *(Kruskal-Wallis H Test & Dunn's Post-Hoc)*
 * **PB2:** Does the traveler's profile (Business, Family, Solo, etc.) dictate a harsher scoring mechanism? *(Kruskal-Wallis H Test & Dunn's Post-Hoc)*
 * **PB3:** Are domestic (Polish) tourists grading hotels differently than international visitors? *(Mann-Whitney U Test)*
-* **PB4 (NLP):** What are the hidden, categorical roots of complaints hidden inside text reviews, and how do they map to hotel standards? *(RoBERTa Model & Custom N-gram Collocations)*
+* **PB4 (NLP):** What are the hidden, categorical roots of complaints hidden inside text reviews, and how do they map to hotel standards? *(PyABSA DeBERTa Model & Custom N-gram Collocations)*
 
 ---
 
@@ -30,23 +30,23 @@ In addition to formal hypothesis testing, the pipeline evaluates the overall mar
 
 ## ⚙️ Architecture & Pipeline
 
-### 1. Data Collection (`booking/scraper.py`)
+### 1. Data Collection (`01_collect_data.py`)
 A highly resilient, custom asynchronous scraper built on **Playwright**. Designed to bypass complex anti-bot protection mechanisms.
 * **Target:** 20 specifically selected hotels across Wrocław (3★, 4★, and 5★ tiers).
-* **Dataset Size:** 6,718 unique reviews preserved after deduplication out of ~8,500 scraped records.
+* **Dataset Size:** ~6,700 unique reviews preserved after deduplication.
 
-### 2. Preprocessing (`analysis_scripts/preprocess.py`)
-Cleans and structures the data into dual datasets:
+### 2. Preprocessing (`02a_preprocess.py` & `02b_recover_business_travelers.py`)
+Cleans and structures the data into dual datasets, alongside a specific sub-routine to recover shadow-banned 'Business' profile types stripped by the booking platform.
 * **`reviews_stats.csv`**: Aggregated metadata used for PB1-PB3 statistical tests.
-* **`absa_input.csv`**: A language-filtered (English-only) dataset dedicated exclusively to the PB4 NLP model.
+* **`absa_input.csv`**: A language-filtered dataset dedicated exclusively to the PB4 NLP model.
 
-### 3. Statistical Validation (`analysis_scripts/analyse_statistics.py`)
+### 3. Statistical Validation (`04_pb1_pb3_analyse_statistics.py`)
 Automated generation of robust, academic-grade reports. Checks distributions via **Shapiro-Wilk** and homoscedasticity via **Levene's test** before seamlessly applying Non-Parametric alternatives (due to non-normal skew typical in e-commerce reviews).
 
-### 4. Advanced NLP & ABSA (`analysis_scripts/pb4_visualize.py`)
-Utilizes an advanced Aspect-Based approach to group textual complaints into actionable business categories (e.g., STAFF, CLEANLINESS, COMFORT). 
+### 4. Advanced NLP & ABSA (`05_pb4_absa_inference.py` & `06_pb4_absa_visualize.py`)
+Utilizes a locally-adapted PyABSA Aspect-Based approach to extract raw complaint targets, and later groups them into actionable business categories (e.g., STAFF, CLEANLINESS, COMFORT). 
 * **Expanded Dictionary:** Custom mapping dict dynamically expanded based on zero-shot fallbacks.
-* **Pseudo-OTE:** Custom N-gram extractor bridging aspects with adjoining adjectives (e.g., `dirty-shower`).
+* **Pseudo-OTE N-Grams:** Custom bigram extractor bridging aspects with adjoining adjectives (e.g., `dirty-shower`) visualized through Dark-mode wordclouds.
 
 ---
 
@@ -70,39 +70,46 @@ Utilizes an advanced Aspect-Based approach to group textual complaints into acti
    playwright install chromium
    ```
 
-## 🚀 Execution Flow
+## 🚀 The Numerical Execution Pipeline
+
+The repository operates on a strictly chronological structure (01 to 07). To replicate the entire thesis findings from scratch, execute the scripts sequentially:
 
 ```bash
-# 1. Generate Baseline Market Demographics (Languages & Negative Rate)
-python analysis_scripts/pb0_distribution_visualize.py
+# 1. Scrape the data
+python analysis_scripts/01_collect_data.py --pass1 --pass2
 
-# 2. Scrape the data
-python analysis_scripts/collect_data.py --pass1 --pass2
+# 2. Clean, filter, and recover missing profiles
+python analysis_scripts/02a_preprocess.py
+python analysis_scripts/02b_recover_business_travelers.py
 
-# 3. Clean and build the structured datasets
-python analysis_scripts/preprocess.py
+# 3. Generate Baseline Market Demographics (PB0)
+python analysis_scripts/03_pb0_distribution_visualize.py
 
-# 4. Generate PB1, PB2, and PB3 statistics and visualizations
-python analysis_scripts/analyse_statistics.py
+# 4. Generate PB1, PB2, and PB3 statistics and distributions
+python analysis_scripts/04_pb1_pb3_analyse_statistics.py
 
-# 5. Generate formatted markdown tables for Word reporting
-python analysis_scripts/generate_word_tables.py
+# 5. Extract specific complaints using PyTorch DeBERTa (ABSA Inference)
+python analysis_scripts/05_pb4_absa_inference.py
+
+# 6. Group ABSA findings and generate high-level heatmaps and wordclouds
+python analysis_scripts/06_pb4_absa_visualize.py
+
+# 7. Generate formatted Markdown tables summarizing the entire project
+python analysis_scripts/07_generate_word_tables.py
 ```
-
-*Note: The NLP RoBERTa model inference runs natively on a separate GPU environment using `absa_input.csv`, outputting `absa_results.csv` which is then visualized via script #4.*
 
 ---
 
 ## 📁 Repository Structure
 ```text
 .
-├── analysis_scripts/            # Core logical scripts (scraping, cleaning, stats, NLP, tables)
+├── analysis_scripts/            # Core chronological scripts (The Numerical Pipeline 01-07)
 ├── booking/                     # Scraper class & logic definitions
 ├── data/
-│   ├── 01_raw/                  # Direct Playwright outputs
+│   ├── 01_raw/                  # Direct Playwright scraper outputs
 │   ├── 02_cleaned/              # Structured statistical dataset
 │   ├── 03_processed/            # NLP-ready dataset
-│   └── 04_results/              # Final deliverables (charts, formatted markdown tables)
+│   └── 04_results/              # Final deliverables (figures & markdown tables)
 ├── requirements.txt             # Minimal project dependencies
 └── README.md                    # Project documentation
 ```

@@ -2,11 +2,11 @@ import pandas as pd
 import os
 
 RESULTS_DIR = "data/04_results/tables/"
-OUT_DIR = "data/04_results/word_tables/"
+OUT_DIR = "data/04_results/tables/"
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
-# Słownik tłumaczeń
+# Translation dictionary
 translation_dict = {
     "Business": "Biznes",
     "Couple": "Pary",
@@ -24,7 +24,7 @@ translation_dict = {
 }
 
 # -------------------------------------------------------------
-# TABELA 1: Charakterystyka
+# TABLE 1: Characteristics
 # -------------------------------------------------------------
 try:
     t_all_raw = pd.read_csv(RESULTS_DIR + "tab_01a_descriptive_overall.csv")
@@ -50,7 +50,7 @@ try:
 
     t_consolidated = pd.concat([t_all, t_stars, t_trav, t_country], ignore_index=True)
     
-    # Zastosowanie polskiego słownika
+    # Applying the Polish dictionary
     t_consolidated["Podgrupa"] = t_consolidated["Podgrupa"].replace(translation_dict)
     
     t_consolidated.rename(columns={
@@ -68,10 +68,10 @@ try:
         f.write("## Tabela 1: Charakterystyka statystyczna próby badawczej\n\n")
         f.write(t_consolidated.to_markdown(index=False) + "\n")
 except Exception as e:
-    print(f"Błąd tabeli 1: {e}")
+    print(f"Table 1 Error: {e}")
 
 # -------------------------------------------------------------
-# TABELE 2 i 3: Post-Hoc Dunna
+# TABLES 2 and 3: Dunn's Post-Hoc
 # -------------------------------------------------------------
 def format_pvalue(x):
     try:
@@ -89,7 +89,7 @@ try:
     t2 = pd.read_csv(RESULTS_DIR + "tab_02c_pb1_posthoc_dunn.csv", index_col=None)
     t2.columns = [c.replace("★", "") for c in t2.columns]
     
-    # Tłumaczenie gwiazdek na słowa
+    # Translating stars into words
     t2.columns = [translation_dict.get(c, c) for c in t2.columns]
     t2.index = t2.columns
     
@@ -99,12 +99,12 @@ try:
         f.write("## Tabela 2: Macierz p-value testu Post-Hoc Dunna (Dla Gwiazdek Hotelowych - PB1)\n\n")
         f.write(t2.to_markdown() + "\n")
 except Exception as e:
-    print(f"Błąd tabeli 2: {e}")
+    print(f"Table 2 Error: {e}")
 
 try:
     t3 = pd.read_csv(RESULTS_DIR + "tab_03c_pb2_posthoc_dunn.csv", index_col=None)
     
-    # Tłumaczenie profili
+    # Translating profiles
     t3.columns = [translation_dict.get(c, c) for c in t3.columns]
     t3.index = t3.columns
     
@@ -114,10 +114,10 @@ try:
         f.write("## Tabela 3: Macierz p-value testu Post-Hoc Dunna (Dla Profilu Podróżnego - PB2)\n\n")
         f.write(t3.to_markdown() + "\n")
 except Exception as e:
-    print(f"Błąd tabeli 3: {e}")
+    print(f"Table 3 Error: {e}")
 
 # -------------------------------------------------------------
-# TABELA 4: Wyniki ABSA
+# TABLE 4: ABSA Results
 # -------------------------------------------------------------
 try:
     t6 = pd.read_csv(RESULTS_DIR + "tab_06_absa_aspect_counts.csv")
@@ -128,7 +128,7 @@ try:
         "POSITIVE": "Sentyment Pozytywny"
     }, inplace=True)
     
-    # Dodanie łącznej sumy na końcu
+    # Adding the total sum at the end
     if all(col in t6.columns for col in ["Sentyment Negatywny", "Sentyment Neutralny", "Sentyment Pozytywny"]):
         t6["Łączna liczba aspektów"] = t6["Sentyment Negatywny"] + t6["Sentyment Neutralny"] + t6["Sentyment Pozytywny"]
         
@@ -136,6 +136,6 @@ try:
         f.write("## Tabela 4: Główne Kategorie Skarg ze zliczeniem sentymentu (PB4 - Wyniki ABSA)\n\n")
         f.write(t6.to_markdown(index=False) + "\n")
 except Exception as e:
-    print(f"Błąd tabeli 4: {e}")
+    print(f"Table 4 Error: {e}")
 
-print("Wygenerowano zaktualizowane tabele z polskimi nazwami i nowymi kolumnami.")
+print("Generated updated tables with Polish names and new columns.")

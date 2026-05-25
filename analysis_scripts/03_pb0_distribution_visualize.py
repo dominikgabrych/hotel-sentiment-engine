@@ -14,7 +14,7 @@ sns.set_theme(style="whitegrid")
 # Load the file
 df = pd.read_csv("data/01_raw/review_distribution.csv")
 
-# 1. Struktura Językowa (Pie Chart lub Bar Chart)
+# 1. Language Structure (Pie Chart or Bar Chart)
 language_counts = {}
 for idx, row in df.iterrows():
     # JSON strings in CSV have double quotes often double escaped, safely evaluate
@@ -29,7 +29,7 @@ for idx, row in df.iterrows():
     for lang, count in lang_dict.items():
         language_counts[lang] = language_counts.get(lang, 0) + count
 
-# Wyodrębnienie specyficznych 4 języków na polecenie (Polski, Angielski, Niemiecki, Czeski)
+# Extracting specific 4 languages as requested (Polish, English, German, Czech)
 lang_series = pd.Series(language_counts).sort_values(ascending=False)
 desired_langs = ['pl', 'en', 'de', 'cs']
 
@@ -42,23 +42,23 @@ if 'Inne' in final_langs:
     inne_val = final_langs.pop('Inne')
     final_langs['Inne'] = inne_val
 
-# Słownik tłumaczeń dla legendy
+# Translation dictionary for the legend
 lang_translate = {"pl": "Polski", "en": "Angielski", "de": "Niemiecki", "cs": "Czeski"}
 final_langs.index = [lang_translate.get(x, x) for x in final_langs.index]
 
 plt.figure(figsize=(9, 6))
 colors = sns.color_palette("pastel")[0:6]
-explode_settings = (0, 0, 0, 0, 0) # Bez wysunięcia, po prostu zmieniamy rotację tortu
+explode_settings = (0, 0, 0, 0, 0) # No offset, just changing the pie rotation
 plt.pie(final_langs.values, labels=final_langs.index, autopct='%1.1f%%', startangle=90, 
         colors=colors, wedgeprops={'edgecolor': 'black'}, pctdistance=0.75, explode=explode_settings)
 plt.title("Struktura Językowa Zostawianych Opinii", fontsize=14, fontweight='bold')
 plt.tight_layout()
 plt.savefig(os.path.join(OUT_DIR, "fig_00a_language_distribution.png"), dpi=300)
-plt.savefig(os.path.join(ARTIFACT_DIR, "fig_00a_language_distribution.png"), dpi=300) # Do podglądu
+plt.savefig(os.path.join(ARTIFACT_DIR, "fig_00a_language_distribution.png"), dpi=300) # For preview
 plt.close()
 
-# 2. Wskaźnik Negatywności (Negative Rate) wg Gwiazdek
-# Zamiast robić ranking hoteli, pokażmy odsetek problemów (negative_total / total)
+# 2. Negative Rate by Stars
+# Instead of a hotel ranking, we show the proportion of problems (negative_total / total)
 df['negative_rate'] = (df['negative_total'] / df['total']) * 100
 negative_by_stars = df.groupby('hotel_stars')['negative_rate'].mean()
 
@@ -68,7 +68,7 @@ plt.title("Wskaźnik Negatywności (Odsetek Skarg) wg Standardu Hotelu", fontsiz
 plt.xlabel("Standard Hotelu (Gwiazdki)", fontsize=12)
 plt.ylabel("Odsetek Skarg (%)", fontsize=12)
 
-# Odsunięcie osi Y, by 10.9% się zmieściło
+# Expand Y-axis margin so 10.9% can fit inside
 plt.ylim(0, negative_by_stars.max() * 1.2)
 
 for p in ax.patches:
@@ -80,4 +80,4 @@ plt.savefig(os.path.join(OUT_DIR, "fig_00e_negative_rate_by_stars.png"), dpi=300
 plt.savefig(os.path.join(ARTIFACT_DIR, "fig_00e_negative_rate_by_stars.png"), dpi=300)
 plt.close()
 
-print("Wygenerowano 5 demograficznych wykresów!")
+print("Generated 5 demographic charts!")

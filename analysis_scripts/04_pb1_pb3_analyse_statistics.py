@@ -31,7 +31,6 @@ matplotlib.use("Agg")  # Non-interactive backend for server/script use
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-import numpy as np
 import pandas as pd
 import scikit_posthocs as sp
 import seaborn as sns
